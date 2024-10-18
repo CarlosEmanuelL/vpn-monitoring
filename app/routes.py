@@ -1,5 +1,4 @@
-from flask import Blueprint, render_template, Flask  # Importar Flask corretamente
-import docker
+from flask import Blueprint, render_template
 import time
 import threading
 import os
@@ -8,36 +7,27 @@ bp = Blueprint('main', __name__)
 
 vpn_log_entries = []  # Variável global para armazenar logs dos usuários conectados
 
-# Função para obter os logs do OpenVPN do container
+# Função para obter os logs do arquivo local
 def get_openvpn_logs():
     try:
-        # Conectar ao Docker
-        client = docker.from_env()
-
-        # Acessar o container pela imagem kylemanna/openvpn
-        containers = client.containers.list(filters={"ancestor": "kylemanna/openvpn"})
-        if not containers:
-            print("Erro: Container com a imagem 'kylemanna/openvpn' não encontrado.")
-            return None
-        container = containers[0]
-
-        # Verificar se o arquivo de log existe no container
-        exec_result = container.exec_run('test -f /tmp/openvpn-status.log')
-        if exec_result.exit_code != 0:
-            print("Arquivo de log não encontrado no container OpenVPN.")
+        # Caminho do arquivo de log montado no container Flask
+        log_file = '/app/openvpn-status/openvpn-status.log'
+        
+        # Verificar se o arquivo de log existe
+        if not os.path.exists(log_file):
+            print("Arquivo de log não encontrado.")
             return None
 
         # Ler o conteúdo do arquivo de log
-        exec_result = container.exec_run('cat /tmp/openvpn-status.log')
-        log_data = exec_result.output.decode('utf-8')
-        if not log_data:
-            print("Log vazio: Nenhum dado encontrado no arquivo de log.")
-            return None
-
-        print("Arquivo de log copiado com sucesso.")
-        return log_data
+        with open(log_file, 'r') as file:
+            log_data = file.read()
+            if not log_data:
+                print("Log vazio: Nenhum dado encontrado no arquivo de log.")
+                return None
+            print("Arquivo de log lido com sucesso.")
+            return log_data
     except Exception as e:
-        print(f"Erro ao acessar o container: {e}")
+        print(f"Erro ao acessar o arquivo de log: {e}")
         return None
 
 # Função para analisar os logs e extrair informações de usuários conectados
@@ -84,6 +74,7 @@ def monitor_vpn():
             vpn_log_entries = parse_vpn_logs(log_data)
         else:
             print("Nenhum dado de log disponível.")
+            vpn_log_entries = []  # Limpa a lista se não houver dados
         time.sleep(60)
 
 # Iniciar a thread que irá monitorar os logs do OpenVPN

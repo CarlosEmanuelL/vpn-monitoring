@@ -5,11 +5,10 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./openvpn-status:/app/openvpn-status
-      - /var/run/docker.sock:/var/run/docker.sock  # Monta o socket Docker
+      - /path/to/openvpn-status:/app/openvpn-status  # Monta o diretório de logs
     networks:
-      - openvpn_bridge_net  # Define a rede para o container Flask
+      - openvpn_bridge_net  # Certifique-se de que a rede está configurada
 
 networks:
   openvpn_bridge_net:
-    driver: bridge  # Define a network como 'bridge'
+    driver: bridge
