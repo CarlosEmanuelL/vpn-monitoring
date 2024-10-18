@@ -1,17 +1,33 @@
 from flask import Blueprint, render_template
 import os
-import subprocess
+import docker
 import time
 import threading
 
 bp = Blueprint('main', __name__)
 
+# Inicializa o cliente Docker
+client = docker.from_env()
+
 # Função para copiar o arquivo de log do container OpenVPN
 def copy_openvpn_log():
     while True:
         try:
-            # Copiando o arquivo de log do container OpenVPN para o diretório local
-            subprocess.run(['docker', 'cp', '<container_id_openvpn>:/tmp/openvpn-status.log', '/app/openvpn-status/openvpn-status.log'])
+            # Nome ou ID do container OpenVPN
+            container = client.containers.get('<container_id_openvpn>')
+
+            # Caminho no container e no sistema local
+            src_path = '/tmp/openvpn-status.log'
+            dest_path = '/app/openvpn-status/openvpn-status.log'
+
+            # Copiar o arquivo de log do container para o host
+            bits, stat = container.get_archive(src_path)
+
+            # Escreve o arquivo no sistema local
+            with open(dest_path, 'wb') as f:
+                for chunk in bits:
+                    f.write(chunk)
+            
             print("Arquivo copiado com sucesso")
         except Exception as e:
             print(f"Erro ao copiar o arquivo: {e}")
