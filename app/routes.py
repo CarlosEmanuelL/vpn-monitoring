@@ -5,6 +5,8 @@ import threading
 
 bp = Blueprint('main', __name__)
 
+vpn_log_entries = []  # Define a variável global para armazenar os logs
+
 # Função para obter os logs do OpenVPN do container
 def get_openvpn_logs():
     try:
@@ -62,7 +64,7 @@ def parse_vpn_logs(log_data):
 
 # Função para monitorar VPN e atualizar as informações dos usuários
 def monitor_vpn():
-    global vpn_log_entries
+    global vpn_log_entries  # Declare a variável global para atualizar seu valor
     while True:
         log_data = get_openvpn_logs()
         if log_data:
@@ -70,6 +72,9 @@ def monitor_vpn():
         else:
             print("Nenhum dado de log disponível.")
         time.sleep(60)
+
+# Iniciar a thread que irá monitorar os logs do OpenVPN
+threading.Thread(target=monitor_vpn, daemon=True).start()
 
 # Rota para exibir as informações dos usuários conectados
 @bp.route('/')
