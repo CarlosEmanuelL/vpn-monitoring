@@ -2,10 +2,11 @@ from flask import Blueprint, render_template, Flask  # Importar Flask corretamen
 import docker
 import time
 import threading
+import os
 
 bp = Blueprint('main', __name__)
 
-vpn_log_entries = []  # Define a variável global para armazenar os logs
+vpn_log_entries = []  # Variável global para armazenar logs dos usuários conectados
 
 # Função para obter os logs do OpenVPN do container
 def get_openvpn_logs():
@@ -20,12 +21,20 @@ def get_openvpn_logs():
             return None
         container = containers[0]
 
+        # Verificar se o arquivo de log existe no container
+        exec_result = container.exec_run('test -f /tmp/openvpn-status.log')
+        if exec_result.exit_code != 0:
+            print("Arquivo de log não encontrado no container OpenVPN.")
+            return None
+
         # Ler o conteúdo do arquivo de log
         exec_result = container.exec_run('cat /tmp/openvpn-status.log')
         log_data = exec_result.output.decode('utf-8')
         if not log_data:
             print("Log vazio: Nenhum dado encontrado no arquivo de log.")
             return None
+
+        print("Arquivo de log copiado com sucesso.")
         return log_data
     except Exception as e:
         print(f"Erro ao acessar o container: {e}")
@@ -37,9 +46,13 @@ def parse_vpn_logs(log_data):
     lines = log_data.splitlines()
 
     # Encontrar a seção CLIENT LIST
-    client_list_start = lines.index("OpenVPN CLIENT LIST") + 2
-    client_list_end = lines.index("ROUTING TABLE")
-    client_lines = lines[client_list_start:client_list_end]
+    try:
+        client_list_start = lines.index("OpenVPN CLIENT LIST") + 2
+        client_list_end = lines.index("ROUTING TABLE")
+        client_lines = lines[client_list_start:client_list_end]
+    except ValueError:
+        print("Erro: Seções 'OpenVPN CLIENT LIST' ou 'ROUTING TABLE' não encontradas no log.")
+        return log_entries
 
     # Analisar as informações dos clientes
     for line in client_lines:
@@ -64,7 +77,7 @@ def parse_vpn_logs(log_data):
 
 # Função para monitorar VPN e atualizar as informações dos usuários
 def monitor_vpn():
-    global vpn_log_entries  # Declare a variável global para atualizar seu valor
+    global vpn_log_entries  # Usar a variável global
     while True:
         log_data = get_openvpn_logs()
         if log_data:
