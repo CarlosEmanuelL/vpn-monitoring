@@ -67,11 +67,11 @@ def parse_vpn_logs(log_data):
                 connected_since_formatted = connected_since_str  # Se não for um timestamp, mantém o original
 
             log_entries.append({
-                username,
-                real_address,
-                bytes_received,
-                bytes_sent,
-                connected_since_formatted
+                'username': username,
+                'real_address': real_address,
+                'bytes_received': bytes_received,
+                'bytes_sent': bytes_sent,
+                'connected_since': connected_since_formatted
             })
 
     if not log_entries:
