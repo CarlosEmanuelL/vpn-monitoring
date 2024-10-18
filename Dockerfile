@@ -1,17 +1,10 @@
-# Utilizando uma imagem base do Python
-FROM python:3.10-slim
+FROM python:3.9-slim
 
-# Definindo o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copiando os arquivos do projeto para o container
-COPY . .
-
-# Instalando as dependências
+COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expondo a porta 5000 para acessar a aplicação
-EXPOSE 5000
+COPY . /app
 
-# Comando para iniciar a aplicação
-CMD ["python", "app.py"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
