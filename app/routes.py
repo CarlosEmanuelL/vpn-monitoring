@@ -2,6 +2,7 @@ from flask import Blueprint, render_template
 import time
 import threading
 import os
+import pytz
 
 bp = Blueprint('main', __name__)
 
@@ -33,16 +34,19 @@ def get_openvpn_logs():
 # Função para analisar os logs e extrair informações de usuários conectados
 def parse_vpn_logs(log_data):
     log_entries = []
-    lines = log_data.splitlines()
+    lines = log_data.strip().splitlines()
 
     # Encontrar a seção CLIENT LIST
     try:
-        client_list_start = lines.index("OpenVPN CLIENT LIST") + 2
+        client_list_start = lines.index("OpenVPN CLIENT LIST") + 1
         client_list_end = lines.index("ROUTING TABLE")
         client_lines = lines[client_list_start:client_list_end]
     except ValueError:
         print("Erro: Seções 'OpenVPN CLIENT LIST' ou 'ROUTING TABLE' não encontradas no log.")
         return log_entries
+
+    # Ignorar nomes das colunas
+    client_lines = [line for line in client_lines if not line.startswith('Common Name')]
 
     # Analisar as informações dos clientes
     for line in client_lines:
@@ -52,18 +56,26 @@ def parse_vpn_logs(log_data):
             real_address = fields[1]
             bytes_received = fields[2]
             bytes_sent = fields[3]
-            connected_since = fields[4]
+            connected_since_str = fields[4]
+            # Converter timestamp para datetime
+            connected_since_timestamp = int(connected_since_str)
+            connected_since_datetime = datetime.utcfromtimestamp(connected_since_timestamp)
+            # Ajustar para o fuso horário de São Paulo
+            sao_paulo_tz = pytz.timezone('America/Sao_Paulo')
+            connected_since_sao_paulo = connected_since_datetime.astimezone(sao_paulo_tz)
+            connected_since_formatted = connected_since_sao_paulo.strftime('%Y-%m-%d %H:%M:%S')
             log_entries.append({
                 'username': username,
                 'real_address': real_address,
                 'bytes_received': bytes_received,
                 'bytes_sent': bytes_sent,
-                'connected_since': connected_since
+                'connected_since': connected_since_formatted
             })
 
     if not log_entries:
         print("Nenhum usuário logado encontrado nos logs.")
     return log_entries
+
 
 # Função para monitorar VPN e atualizar as informações dos usuários
 def monitor_vpn():

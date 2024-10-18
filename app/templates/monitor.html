@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoramento de VPN</title>
     <style>
         body {
@@ -13,30 +12,28 @@
 
         h1 {
             color: #005f99;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
+            text-align: center;
             margin-top: 20px;
         }
 
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: left;
-        }
-
-        th {
-            background-color: #005f99;
-            color: #fff;
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
         }
 
         td {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            text-align: left;
             background-color: #e3f2fd;
         }
 
-        tr:hover {
+        tr:nth-child(even) td {
+            background-color: #ffffff;
+        }
+
+        tr:hover td {
             background-color: #ffcc80;
         }
     </style>
@@ -44,15 +41,6 @@
 <body>
     <h1>Usuários Conectados ao OpenVPN</h1>
     <table>
-        <thead>
-            <tr>
-                <th>Usuário</th>
-                <th>Endereço Real</th>
-                <th>Bytes Recebidos</th>
-                <th>Bytes Enviados</th>
-                <th>Conectado Desde</th>
-            </tr>
-        </thead>
         <tbody>
             {% for user in users %}
                 <tr>
