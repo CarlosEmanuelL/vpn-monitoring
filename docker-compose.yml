@@ -7,3 +7,9 @@ services:
     volumes:
       - ./openvpn-status:/app/openvpn-status
       - /var/run/docker.sock:/var/run/docker.sock  # Monta o socket Docker
+    networks:
+      - openvpn_bridge_net  # Define a rede para o container Flask
+
+networks:
+  openvpn_bridge_net:
+    driver: bridge  # Define a network como 'bridge'

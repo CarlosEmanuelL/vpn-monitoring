@@ -1,11 +1,9 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, Flask  # Importar Flask corretamente
 import docker
 import time
 import threading
 
-app = Flask(__name__)
-
-vpn_log_entries = []
+bp = Blueprint('main', __name__)
 
 # Função para obter os logs do OpenVPN do container
 def get_openvpn_logs():
@@ -73,13 +71,7 @@ def monitor_vpn():
             print("Nenhum dado de log disponível.")
         time.sleep(60)
 
-# Iniciar a thread que irá monitorar os logs do OpenVPN
-threading.Thread(target=monitor_vpn, daemon=True).start()
-
 # Rota para exibir as informações dos usuários conectados
-@app.route('/')
+@bp.route('/')
 def monitor():
     return render_template('monitor.html', users=vpn_log_entries)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
