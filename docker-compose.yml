@@ -6,3 +6,4 @@ services:
       - "5000:5000"
     volumes:
       - ./openvpn-status:/app/openvpn-status
+      - /var/run/docker.sock:/var/run/docker.sock  # Monta o socket Docker
