@@ -2,7 +2,7 @@ from flask import Blueprint, render_template
 import time
 import threading
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 bp = Blueprint('main', __name__)
@@ -56,15 +56,11 @@ def parse_vpn_logs(log_data):
             bytes_sent = fields[3]
             connected_since_str = fields[4]
 
-            # Converter o campo "Connected Since" para datetime no fuso horário de São Paulo
+            # Subtrair 3 horas do horário de conexão para ajustar ao fuso horário de São Paulo
             try:
                 connected_since_datetime = datetime.strptime(connected_since_str, '%Y-%m-%d %H:%M:%S')
-                # Definir o fuso horário original como UTC
-                connected_since_datetime = pytz.UTC.localize(connected_since_datetime)
-                # Aplicar o fuso horário de São Paulo
-                sao_paulo_tz = pytz.timezone('America/Sao_Paulo')
-                connected_since_sao_paulo = connected_since_datetime.astimezone(sao_paulo_tz)
-                connected_since_formatted = connected_since_sao_paulo.strftime('%Y-%m-%d %H:%M:%S')
+                connected_since_adjusted = connected_since_datetime - timedelta(hours=3)
+                connected_since_formatted = connected_since_adjusted.strftime('%Y-%m-%d %H:%M:%S')
             except ValueError:
                 connected_since_formatted = connected_since_str  # Se não for um timestamp válido, mantém o original
 
@@ -98,13 +94,4 @@ threading.Thread(target=monitor_vpn, daemon=True).start()
 # Rota para exibir as informações dos usuários conectados
 @bp.route('/')
 def monitor():
-    # Definir o fuso horário de São Paulo para exibir no template
-    sao_paulo_tz = pytz.timezone('America/Sao_Paulo')
-    for user in vpn_log_entries:
-        try:
-            connected_since_datetime = datetime.strptime(user['connected_since'], '%Y-%m-%d %H:%M:%S')
-            connected_since_sao_paulo = sao_paulo_tz.localize(connected_since_datetime)
-            user['connected_since'] = connected_since_sao_paulo.strftime('%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            pass  # Se não for um timestamp válido, mantém o original
     return render_template('monitor.html', users=vpn_log_entries)
