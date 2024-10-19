@@ -59,6 +59,8 @@ def parse_vpn_logs(log_data):
             # Converter o campo "Connected Since" para datetime no fuso horário de São Paulo
             try:
                 connected_since_datetime = datetime.strptime(connected_since_str, '%Y-%m-%d %H:%M:%S')
+                # Definir o fuso horário original como UTC
+                connected_since_datetime = pytz.UTC.localize(connected_since_datetime)
                 # Aplicar o fuso horário de São Paulo
                 sao_paulo_tz = pytz.timezone('America/Sao_Paulo')
                 connected_since_sao_paulo = connected_since_datetime.astimezone(sao_paulo_tz)
