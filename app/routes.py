@@ -94,4 +94,4 @@ threading.Thread(target=monitor_vpn, daemon=True).start()
 # Rota para exibir as informações dos usuários conectados
 @bp.route('/')
 def monitor():
-    return render_template('monitor.html', users=vpn_log_entries)
+    return render_template('monitor.html', users=vpn_log_entries, show_headers=False)
