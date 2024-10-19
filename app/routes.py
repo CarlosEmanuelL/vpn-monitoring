@@ -98,4 +98,13 @@ threading.Thread(target=monitor_vpn, daemon=True).start()
 # Rota para exibir as informações dos usuários conectados
 @bp.route('/')
 def monitor():
+    # Definir o fuso horário de São Paulo para exibir no template
+    sao_paulo_tz = pytz.timezone('America/Sao_Paulo')
+    for user in vpn_log_entries:
+        try:
+            connected_since_datetime = datetime.strptime(user['connected_since'], '%Y-%m-%d %H:%M:%S')
+            connected_since_sao_paulo = sao_paulo_tz.localize(connected_since_datetime)
+            user['connected_since'] = connected_since_sao_paulo.strftime('%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            pass  # Se não for um timestamp válido, mantém o original
     return render_template('monitor.html', users=vpn_log_entries)
